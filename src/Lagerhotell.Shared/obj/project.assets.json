@@ -575,11 +575,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ohage\\source\\repos\\Olahben\\LagerhotellAPI\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
+      "projectUniqueName": "C:\\Users\\ohage\\source\\repos\\frydenlund-lagerhotell\\src\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
       "projectName": "Lagerhotell.Shared",
-      "projectPath": "C:\\Users\\ohage\\source\\repos\\Olahben\\LagerhotellAPI\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
+      "projectPath": "C:\\Users\\ohage\\source\\repos\\frydenlund-lagerhotell\\src\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
       "packagesPath": "C:\\Users\\ohage\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ohage\\Source\\Repos\\Olahben\\LagerhotellAPI\\Lagerhotell.Shared\\obj\\",
+      "outputPath": "C:\\Users\\ohage\\source\\repos\\frydenlund-lagerhotell\\src\\Lagerhotell.Shared\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ohage\\AppData\\Roaming\\NuGet\\NuGet.Config",

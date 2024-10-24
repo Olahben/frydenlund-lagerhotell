@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "P0gIgM3InMY=",
+  "dgSpecHash": "9rI/6/PVQMA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ohage\\source\\repos\\Olahben\\LagerhotellAPI\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
+  "projectFilePath": "C:\\Users\\ohage\\source\\repos\\frydenlund-lagerhotell\\src\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ohage\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
     "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.authorization\\8.0.4\\microsoft.aspnetcore.authorization.8.0.4.nupkg.sha512",

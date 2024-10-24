@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Lagerhotell.Shared")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3d8fb0bc67eeb32108c3b76ee4ae98baeae61a4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6b7668d77390300660bd694ae07e808db2c87e1f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Lagerhotell.Shared")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Lagerhotell.Shared")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
