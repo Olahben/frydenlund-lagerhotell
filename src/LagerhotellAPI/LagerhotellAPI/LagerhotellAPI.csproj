@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lagerhotell.Shared\Lagerhotell.Shared.csproj" />
+	  <ProjectReference Include="..\Lagerhotell.Shared\Lagerhotell.Shared.csproj" />
   </ItemGroup>
 
 </Project>
