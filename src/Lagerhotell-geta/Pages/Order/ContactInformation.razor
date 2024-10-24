@@ -1,0 +1,92 @@
+﻿@inject AuthStateProviderService _customAuthStateProviderService
+
+@if (isInitialized)
+{
+    <MudItem xs="12">
+        <MudPaper Square="true" Style="width: 100%; padding: 16px;">
+            <MudText Typo="Typo.h6">Kontaktinformasjon</MudText>
+            <AuthorizeView>
+                <Authorized>
+                    <MudText Typo="Typo.body1" Style="margin-bottom: 16px;">Sørg for at informasjonen vi har registrert om deg stemmer. Hvis ikke kan du endre den her. Gå til profil for å eventuelt endre e-postaddresse eller passord.</MudText>
+                    @if (user.User.FirstName != null)
+                    {
+                        <MudForm Model="@user.User" Validation="@(_userValidator.ValidateValue)" @ref="userForm" ValidationDelay="0">
+                            <MudGrid Style="justify-content: start !important;">
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Fornavn" @bind-Value="user.User.FirstName" Immediate="true" For="@(() => user.User.FirstName)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Etternavn" @bind-Value="user.User.LastName" Immediate="true" For="@(() => user.User.LastName)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField Label="Mobilnummer" @bind-Value="user.User.PhoneNumber" Immediate="true" For="@(() => user.User.PhoneNumber)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField Label="Addresse" @bind-Value="user.User.Address.StreetAddress" Immediate="true" For="@(() => user.User.Address.StreetAddress)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Postkode" @bind-Value="user.User.Address.PostalCode" Immediate="true" For="@(() => user.User.Address.PostalCode)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Poststed" @bind-Value="user.User.Address.City" Immediate="true" For="@(() => user.User.Address.City)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" Style="padding-top: 12px;">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="(async () => await UpdateUser())">Oppdater</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
+                    }
+                    else if (user.CompanyUser.FirstName != null)
+                    {
+                        <MudForm Model="@user.CompanyUser" Validation="@(_companyUserValidator.ValidateValue)" @ref="userForm" ValidationDelay="0">
+                            <MudGrid Style="justify-content: start !important;">
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Organisasjonsnummer" @bind-Value="user.CompanyUser.CompanyNumber" Immediate="true" For="@(() => user.CompanyUser.CompanyNumber)"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" Style="padding-top: 12px;">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="(async () => await UpdateUser())">Oppdater</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
+                    }
+                </Authorized>
+                <NotAuthorized>
+                    <MudText>Hei! Du må logge inn inn eller registrere deg for å kunne bestille en bod hos oss.</MudText>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudPaper>
+    </MudItem>
+}
+
+@code {
+    private bool isInitialized { get; set; } = false;
+    private UserAndCompanyUser user { get; set; }
+    private CompanyUserValidator _companyUserValidator = new CompanyUserValidator();
+    private UserValidator _userValidator = new UserValidator();
+    private MudForm userForm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            user = await _customAuthStateProviderService.GetUser();
+            isInitialized = true;
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt under henting av brukerinformasjon. Prøv igjen senere.", MudBlazor.Severity.Error);
+        }
+    }
+
+    private async Task UpdateUser(bool isCompanyUser = false)
+    {
+        if (!isCompanyUser)
+        {
+            await userForm.Validate();
+            if (userForm.IsValid)
+            {
+                Console.WriteLine("User is valid");
+            }
+        }
+    }
+}

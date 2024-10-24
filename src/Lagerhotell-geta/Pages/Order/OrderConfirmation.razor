@@ -1,0 +1,108 @@
+﻿@inject NavigationManager _navigationManager
+@inject OrderService _orderService
+
+<MudItem xs="12">
+    <MudPaper Square="true" Style="width: 100%; padding: 16px;">
+        <MudText Typo="Typo.h6">Ordrebekreftelse</MudText>
+        <MudText Typo="Typo.body1">Her er en oversikt over din bestilling. Vennligst bekreft at alt stemmer før du fullfører bestillingen.</MudText>
+        <MudSimpleTable Style="overflow-x: auto; margin-top: 8px;">
+            <tbody>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Avdeling</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@RelevantWarehouseHotel.Name</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Lengde</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(RelevantStorageUnit.Dimensions.Length)M</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Bredde</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(RelevantStorageUnit.Dimensions.Width)M</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Høyde</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(RelevantStorageUnit.Dimensions.Height)M</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Størrelse</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(Math.Round((decimal) RelevantStorageUnit.Dimensions.Area * 2) / 2)M2</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Volum</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(Math.Round((decimal) RelevantStorageUnit.Dimensions.Volume * 2) / 2)M3</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Temperert</MudText></td>
+                    @if (RelevantStorageUnit.Temperated)
+                    {
+                        <td><MudText Style="font-weight: 450" Typo="Typo.body1">Ja</MudText></td>
+                    }
+                    else
+                    {
+                        <td><MudText Style="font-weight: 450" Typo="Typo.body1">Nei</MudText></td>
+                    }
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Innflyttingsdato</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@RelevantOrder.OrderPeriod.OrderDate.Value.Date.Date.ToShortDateString()</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Avtaletype</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">Månedlig</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Pris per måned</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">@(RelevantStorageUnit.PricePerMonth.Amount)kr</MudText></td>
+                </tr>
+                <tr>
+                    <td><MudText Typo="Typo.body1">Oppstartsgebyr</MudText></td>
+                    <td><MudText Style="font-weight: 450" Typo="Typo.body1">119kr</MudText></td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+        @if (IsUserAuthenticated)
+        {
+            <MudButton Style="margin-top: 16px;" @onclick="ConfirmOrder" Color="Color.Primary" FullWidth="true" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward">Bestill nå</MudButton>
+        }
+        else
+        {
+            <MudButton Disabled="true" Style="margin-top: 16px;" Variant="Variant.Filled">Logg inn for å bestille</MudButton>
+        }
+    </MudPaper>
+</MudItem>
+
+@code {
+    [Parameter]
+    public StorageUnit RelevantStorageUnit { get; set; } = new();
+    [Parameter]
+    public LagerhotellAPI.Models.DomainModels.Order RelevantOrder { get; set; }
+    [Parameter]
+    public WarehouseHotel RelevantWarehouseHotel { get; set; } = new();
+    [Parameter]
+    public bool IsUserAuthenticated { get; set; } = false;
+
+    public async Task ConfirmOrder()
+    {
+        bool validationResult = await _orderService.ValidateOrder(RelevantOrder);
+        if (validationResult)
+        {
+            try
+            {
+                string orderId = await _orderService.CreateOrder(RelevantOrder);
+                _navigationManager.NavigateTo($"/order-sent/{orderId}");
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine(e);
+                Snackbar.Add("Noe gikk galt da vi prøvde å registrere bestillingen din,vennligst prøv på nytt om fem minutter, kontakt eventuelt kundeservice.", MudBlazor.Severity.Error);
+                return;
+            }
+            Snackbar.Add("Bestillingen er registrert", MudBlazor.Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Det er noe galt med verdiene du har fylt inn, vennligst sjekk dem. Logg inn hvis du ikke har gjort det.", MudBlazor.Severity.Error);
+        }
+    }
+
+}

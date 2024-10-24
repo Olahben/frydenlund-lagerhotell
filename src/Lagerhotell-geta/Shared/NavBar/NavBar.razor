@@ -1,0 +1,141 @@
+﻿@inject NavigationManager _navigationManager
+@inject UserService _userService
+@inject AppState _appState
+@inject CompanyUserService _companyUserService
+@inject Auth0Service _auth0Service
+@inject AuthenticationStateProvider _authStateProviderService
+@inject AuthStateProviderService _customAuthStateProviderService
+
+<style>
+    .clickable:hover {
+        cursor: pointer;
+    }
+</style>
+
+@if (isInitialized)
+{
+    <MudContainer Style="max-width: 1280px !important; background-color: white; padding: 0; padding-left: 16px; padding-right: 16px;">
+        <MudGrid Style="margin: 0 !important; width: 100% !important; color: white; align-items: center;">
+            <MudItem Style="display: flex; justify-content: center; margin: 0; padding: 0;">
+                <MudImage Class="clickable" onclick="@RedirectToHome" Height="40" Width="32" Src="Data/Bilder/logoIkonLilla.png"></MudImage>
+                <MudButton Style="margin-left: 6px;" Variant="Variant.Text" OnClick="@(() => OpenRightDrawer(Anchor.End))">Våre lagerhotell</MudButton>
+            </MudItem>
+            <MudSpacer />
+            <AuthorizeView>
+                <NotAuthorized>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <MudItem Style="padding: 0; margin:0; display: flex; justify-content: center; height: 40px !important;">
+                            <MudButton Style="margin-left: 8px;" @onclick="RedirectToAuth0Login" Variant="Variant.Text">Logg inn</MudButton>
+                            <MudButton Href="/registrer-deg" Variant="Variant.Text">Registrer deg</MudButton>
+                        </MudItem>
+                    </MudHidden>
+                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                        <MudItem Style="padding: 0;">
+                            <MudMenu Icon="@Icons.Material.Filled.Menu" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Style="margin-right: 26px;">
+                                <ChildContent>
+                                    <MudMenuItem><MudText Href="/registrer-deg">Registrering</MudText></MudMenuItem>
+                                    <MudMenuItem><MudText @onclick="RedirectToAuth0Login">Innlogging</MudText></MudMenuItem>
+                                </ChildContent>
+                            </MudMenu>
+                        </MudItem>
+                    </MudHidden>
+                </NotAuthorized>
+                <Authorized>
+                    @if (user != null)
+                    {
+                        <MudAvatar @onclick="(() => NavigateToUserSettings(user))" class="clickable" Color="Color.Primary">
+                            @user.FirstName.Substring(0, 1)
+                        </MudAvatar>
+                    }
+                    @if (companyUser != null)
+                    {
+                        <MudAvatar @onclick="(() => NavigateToUserSettings(companyUser))" class="clickable" Color="Color.Primary">
+                            @companyUser.FirstName.Substring(0, 1)
+                        </MudAvatar>
+                    }
+                </Authorized>
+            </AuthorizeView>
+            <MudDrawer @bind-Open="@rightSideBarOpen" Anchor="@anchor" Elevation="1" Variant="@DrawerVariant.Temporary">
+                <Lagerhotell.Pages.SideBar.LocationsSideBar />
+            </MudDrawer>
+        </MudGrid>
+    </MudContainer>
+}
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    [Parameter]
+    public EventCallback OnLogIn { get; set; }
+    private bool isInitialized = false;
+    bool rightSideBarOpen;
+    Anchor anchor;
+    private User user;
+    private CompanyUser companyUser;
+
+    void RedirectToHome()
+    {
+        _navigationManager.NavigateTo("/");
+    }
+
+    void OpenRightDrawer(Anchor anchor)
+    {
+        rightSideBarOpen = true;
+        this.anchor = anchor;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _appState.OnChange += async () => await UpdateUserAndState();
+        await UpdateUserAndState();
+        isInitialized = true;
+    }
+
+    private async Task UpdateUserAndState()
+    {
+        try
+        {
+            string? jwt = await SessionService.GetJwtFromLocalStorage();
+            if (jwt != null)
+            {
+                var userOrCompanyUser = await _customAuthStateProviderService.GetUser();
+                Console.WriteLine(userOrCompanyUser.CompanyUser.FirstName);
+                if (userOrCompanyUser.User.FirstName != null)
+                {
+                    user = userOrCompanyUser.User;
+                }
+                else
+                {
+                    companyUser = userOrCompanyUser.CompanyUser;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Snackbar.Add("En feil oppstod", MudBlazor.Severity.Error);
+        }
+    }
+
+    public void Dispose()
+    {
+        _appState.OnChange += async () => await UpdateUserAndState();
+    }
+
+    private async Task NavigateToUserSettings(object userLoggedIn)
+    {
+        if (user != null)
+        {
+            _navigationManager.NavigateTo($"/user/{user.Id}");
+        }
+        else
+        {
+            _navigationManager.NavigateTo($"/user/{companyUser.CompanyUserId}");
+        }
+    }
+
+    private async Task RedirectToAuth0Login()
+    {
+        await _auth0Service.RedirectToLoginPage();
+    }
+}

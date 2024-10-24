@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="wwwroot\Lib\**" />
+	  <Content Remove="wwwroot\Lib\**" />
+	  <EmbeddedResource Remove="wwwroot\Lib\**" />
+	  <None Remove="wwwroot\Lib\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Shared\Lib\StorageUnitInfoTexts.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Remove="Pages\json.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Pages\SucessLogin.css" />
+	  <None Remove="Pages\SucessLogin.css.css" />
+	  <None Remove="Pages\SucessLogin.razor.css" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Shared\Lib\StorageUnitInfoTexts.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentValidation" Version="11.9.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.10" />
+		<PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="8.0.8" />
+		<PackageReference Include="MudBlazor" Version="7.6.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.8" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.8" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LagerhotellAPI\Lagerhotell.Shared\Lagerhotell.Shared.csproj" />
+	</ItemGroup>
+	
+
+	<ItemGroup>
+	  <Folder Include="Pages\NewFolder\" />
+	  <Folder Include="Shared\State\" />
+	</ItemGroup>
+	
+	
+</Project>

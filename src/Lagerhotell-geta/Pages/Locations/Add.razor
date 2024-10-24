@@ -1,0 +1,64 @@
+﻿@using Lagerhotell.Services;
+
+@inject IDialogService _dialogService
+@inject SessionService _sessionService
+@inject LocationService _locationService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" Model="location" Validation="@(_locationValidator.ValidateValue)">
+            <MudTextField T="string" @bind-Value="location.Name" For="@(() => location.Name)" Immediate="true" Label="Navn" Placeholder="Oslo og omegn" Required="true"></MudTextField>
+            <MudSwitch Style="margin-top: 10px" T="bool" @bind-Value="location.IsActive" For="@(() => location.IsActive)" Label="Aktiv?"></MudSwitch>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Avbryt</MudButton>
+        <MudButton Color="Color.Primary" OnClick="AddLocation">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+
+</style>
+
+@code {
+    private readonly LocationValidator _locationValidator = new LocationValidator();
+    private readonly Location location = new Location();
+    MudForm form;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private async Task? AddLocation()
+    {
+        try
+        {
+            await form.Validate();
+            if (!form.IsValid)
+            {
+                Snackbar.Add("Det er noe galt med verdiene du har fylt inn, vær så snill å sjekk tilhørende feilmelding", MudBlazor.Severity.Error);
+                return;
+            }
+            string jwtToken = await _sessionService.GetJwtFromLocalStorage();
+            await _locationService.AddLocation(location.Name, location.IsActive, jwtToken);
+            Snackbar.Add("Lokasjonen ble lagt til", MudBlazor.Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (InvalidOperationException e)
+        {
+            Snackbar.Add("Lokasjonen eksisterer fra før av", MudBlazor.Severity.Error);
+            Console.WriteLine($"{e}");
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Snackbar.Add("Du har ikke tilgang til å legge til lokasjoner", MudBlazor.Severity.Error);
+            Console.WriteLine($"{e}");
+        }
+
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt", MudBlazor.Severity.Error);
+            Console.WriteLine($"{e}");
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

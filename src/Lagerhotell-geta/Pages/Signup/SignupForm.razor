@@ -1,0 +1,217 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using System.IO
+@using System.Text
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Collections.Generic
+@inject AppState _appState
+@inject NavigationManager _navigationManager
+@inject UserService _userService
+@inject AuthenticateUserService _authenticationService
+@inject SessionService _sessionService
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject UserServiceSignup _userServiceSignup
+
+<MudGrid Justify="Justify.Center">
+    <MudItem Style="height: fit-content;">
+        <MudPaper MaxWidth="760px" Style="margin-top: 46px; padding: 12px; margin-left: 6px; margin-right: 6px; height: fit-content;">
+            <MudItem Style="padding-bottom: 0;" xs="12" sm="12">
+                <MudText Style="font-weight: 450;" Typo="Typo.h4">Registrer deg her</MudText>
+                <MudText Typo="Typo.body1">Ett steg nærmere bedre plass</MudText>
+                <MudSwitch Color="Color.Info" @bind-Value="CompanyUser" Label="Bedriftsregistering"></MudSwitch>
+            </MudItem>
+            @if (CompanyUser)
+            {
+                <SignUpCompanyUser @rendermode="RenderMode.InteractiveAuto" />
+            }
+            else
+            {
+                <EditForm Model="@accountFormValues" OnValidSubmit="SignupUser">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem Style="padding-bottom: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Ett navn er obligatorisk" Label="Fornavn" InputType="@InputType.Text" @bind-Value="accountFormValues.FirstName" For="@(() => accountFormValues.FirstName)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Ett etternavn er obligatorisk" Label="Etternavn" InputType="@InputType.Text" @bind-Value="accountFormValues.LastName" For="@(() => accountFormValues.LastName)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="12">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="En fødselsdato er obligatorisk" Label="Fødslelsdato" InputType="@InputType.Date" @bind-Value="accountFormValues.BirthDate" For="@(() => accountFormValues.BirthDate)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="12">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" Label="Adresse" InputType="@InputType.Text" @bind-Value="accountFormValues.Address" For="@(() => accountFormValues.Address)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" Label="Postnummer" InputType="@InputType.Text" @bind-Value="accountFormValues.PostalCode" For="@(() => accountFormValues.PostalCode)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" Label="Poststed" InputType="@InputType.Text" @bind-Value="accountFormValues.City" For="@(() => accountFormValues.City)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Ett mobilnummer er obligatorisk" Label="Mobilnummer" InputType="@InputType.Telephone" @bind-Value="accountFormValues.PhoneNumber" For="@(() => accountFormValues.PhoneNumber)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Label="E-post" InputType="InputType.Email" @bind-Value="accountFormValues.Email" For="@(() => accountFormValues.Email)" OnlyValidateIfDirty="true"></MudTextField>
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="6" sm="6">
+                            <MudTextField T="string" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Ett passord er obligatorisk" Label="Passord" InputType="@PasswordInput" @bind-Value="accountFormValues.Password" For="@(() => accountFormValues.Password)" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Vis passord" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="6" sm="6">
+                            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Du må skrive inn passordet ditt på nytt" Label="Repeter passord" InputType="@InputType.Password" @bind-Value="accountFormValues.PasswordRepeat" For="@(() => accountFormValues.PasswordRepeat)" OnlyValidateIfDirty="true" />
+                        </MudItem>
+                        <MudItem Style="padding-bottom: 24px; padding-top: 12px;" xs="12" sm="12">
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Color="Color.Primary">Registrer deg</MudButton>
+                        </MudItem>
+                        @*
+                    <MudItem xs="6" sm="6">
+                    <MudCheckBox T="bool" Required="true" Label="Er du en administrator?" @bind-Value="accountFormValues.IsAdministrator" For="@(() => accountFormValues.IsAdministrator)"></MudCheckBox>
+                    </MudItem> *@
+                    </MudGrid>
+                </EditForm>
+            }
+        </MudPaper>
+        <MudText Style="text-align: center; margin-top: 6px;" Typo="Typo.body1">Har du registrert deg fra før av? Logg deg inn <MudLink Style="font-weight: 450;" Href="/logg-inn">her</MudLink></MudText>
+    </MudItem>
+</MudGrid>
+
+
+
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject SessionService sessionService
+
+@code {
+    private AccountFormValues accountFormValues = new AccountFormValues();
+    private static readonly HttpClient client = new HttpClient();
+    private UserServiceSignup userServiceSignup = new UserServiceSignup();
+    public string ErrorMessage = "";
+    [Inject]
+    protected AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+    bool showPassword;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    bool CompanyUser = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_appState.UserBeforeEmailVerified != null) {
+            accountFormValues.FirstName = _appState.UserBeforeEmailVerified.FirstName;
+            accountFormValues.LastName = _appState.UserBeforeEmailVerified.LastName;
+            accountFormValues.PhoneNumber = _appState.UserBeforeEmailVerified.PhoneNumber;
+            accountFormValues.Email = _appState.UserBeforeEmailVerified.Email;
+            accountFormValues.BirthDate = _appState.UserBeforeEmailVerified.BirthDate;
+            accountFormValues.Address = _appState.UserBeforeEmailVerified.Address.StreetAddress;
+            accountFormValues.PostalCode = _appState.UserBeforeEmailVerified.Address.PostalCode;
+            accountFormValues.City = _appState.UserBeforeEmailVerified.Address.City;
+            accountFormValues.Password = _appState.UserBeforeEmailVerified.Password;
+            accountFormValues.PasswordRepeat = _appState.UserBeforeEmailVerified.Password;
+            accountFormValues.IsAdministrator = _appState.UserBeforeEmailVerified.IsAdministrator;
+        }
+    }
+
+    public class AccountFormValues
+    {
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [StringLength(36, ErrorMessage = "Maks 36 bokstaver, minimum 2", MinimumLength = 2)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [StringLength(112, ErrorMessage = "Maks 112 bokstaver, minimum 2", MinimumLength = 2)]
+        public string LastName { get; set; } = string.Empty;
+
+        [UserServiceSignup.ContainsOnlyNumbers(ErrorMessage = "Telefonnummeret ditt kan bare inneholde tall")]
+        [Required(ErrorMessage = "Ett telefonnummer er obligatorisk")]
+        [StringLength(8, ErrorMessage = "Nummeret må være norskt, åtte siffer", MinimumLength = 8)]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [EmailAddress(ErrorMessage = "E-postaddressen din skal være i formatet abc@abc.com")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [UserServiceSignup.IsOverLegalAge(ErrorMessage = "Du må være over 18 år")]
+        public string BirthDate { get; set; } = string.Empty;
+
+        [StringLength(112, ErrorMessage = "Addressen din kan være 2-112 bokstaver/tall lang")]
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [UserServiceSignup.ContainsNumbersAndLetters(ErrorMessage = "Dette feltet må inneholde bokstaver og tall")]
+        public string Address { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [StringLength(4, ErrorMessage = "Dette må inneholde fire siffer", MinimumLength = 4)]
+        public string PostalCode { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [StringLength(140, ErrorMessage = "Dette feltet må være 2-140 bokstaver langt")]
+        [UserServiceSignup.ContainsOnlyLetters(ErrorMessage = "Dette feltet kan bare inneholde bokstaver")]
+        public string City { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [StringLength(48, ErrorMessage = "Maks 48 tall eller bokstaver, minimum åtte", MinimumLength = 8)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$", ErrorMessage = "Passordet må inneholde minst én stor bokstav, én liten bokstav og ett tall")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Dette feltet er obligatorisk")]
+        [Compare(nameof(Password), ErrorMessage = "Passordene samstemmer ikke")]
+        public string PasswordRepeat { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Obligatorisk")]
+        public bool IsAdministrator { get; set; }
+    }
+
+    public async Task? SignupUser()
+    {
+        try
+        {
+            Address userAddress = new Address(accountFormValues.Address, accountFormValues.PostalCode, accountFormValues.City);
+            User user = new User(accountFormValues.FirstName, accountFormValues.LastName, accountFormValues.PhoneNumber, accountFormValues.Email, accountFormValues.BirthDate, userAddress, accountFormValues.Password, accountFormValues.IsAdministrator, false, "");
+            try
+            {
+                bool exists = await _userService.DoesSimilarUserExist(user.PhoneNumber, user.Email);
+                if (exists)
+                {
+                    Snackbar.Add("En bruker med dette telefonnummeret eller e-posten er allerede registrert", MudBlazor.Severity.Error);
+                    return;
+                }
+            } catch (Exception e)
+            {
+                Snackbar.Add("Noe gikk galt, prøv på nytt senere", MudBlazor.Severity.Error);
+                return;
+            }
+            _appState.SetUserBeforeEmailVerified(user);
+            (string userId, string token) = await _userServiceSignup.SignupUserWithUserModel(user);
+            await _sessionService.AddJwtToLocalStorage(token);
+            await _authenticationStateProvider.GetAuthenticationStateAsync();
+            _appState.NotifyStateChanged();
+            _navigationManager.NavigateTo("/verifiser-epost");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            ErrorMessage = "En bruker med dette telefonnummeret er allerede registrert";
+            Snackbar.Add(ErrorMessage, MudBlazor.Severity.Error);
+            StateHasChanged();
+        }
+    }
+
+    void TogglePasswordVisibility()
+    {
+        @if (showPassword)
+        {
+            showPassword = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            showPassword = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}

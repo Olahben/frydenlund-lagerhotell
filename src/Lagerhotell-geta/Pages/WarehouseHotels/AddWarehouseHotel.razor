@@ -1,0 +1,145 @@
+﻿@using Lagerhotell.Services;
+@using LagerhotellAPI.Models.DomainModels.Validators;
+@using LagerhotellAPI.Models.ValueTypes;
+
+@inject IDialogService _dialogService
+@inject SessionService _sessionService
+@inject WarehouseHotelService _warehouseHotelService
+@inject FileHandler _fileService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" Model="_newWarehouseHotel" Validation="@(_warehouseHotelValidator.ValidateValue)">
+            <MudTextField Label="Breddegrad" Immediate="true" @bind-Value="_newWarehouseHotel.Coordinate.Latitude" For="(() => _newWarehouseHotel.Coordinate.Latitude)"></MudTextField>
+            <MudTextField Label="Lengdegrad" Immediate="true" @bind-Value="_newWarehouseHotel.Coordinate.Longitude" For="(() => _newWarehouseHotel.Coordinate.Longitude)"></MudTextField>
+            <MudTextField Label="Hvor stor er den minste utleieenheten? (Oppgitt i meter2)" Immediate="true" @bind-Value="_newWarehouseHotel.StorageUnitsSizes.MinSize" For="(() => _newWarehouseHotel.StorageUnitsSizes.MinSize)"></MudTextField>
+            <MudTextField Label="Hvor stor er den største utleieenheten? (Oppgitt i meter2)" Immediate="true" @bind-Value="_newWarehouseHotel.StorageUnitsSizes.MaxSize" For="(() => _newWarehouseHotel.StorageUnitsSizes.MaxSize)"></MudTextField>
+            <MudTextField T="string" Label="Gateaddresse" Immediate="true" @bind-Value="_newWarehouseHotel.Address.StreetAddress" For="(() => _newWarehouseHotel.Address.StreetAddress)"></MudTextField>
+            <MudTextField T="string" Label="Postkode" Immediate="true" @bind-Value="_newWarehouseHotel.Address.PostalCode" For="(() => _newWarehouseHotel.Address.PostalCode)"></MudTextField>
+            <MudTextField T="string" Label="Poststed" Immediate="true" @bind-Value="_newWarehouseHotel.Address.City" For="(() => _newWarehouseHotel.Address.City)"></MudTextField>
+            <MudTextField T="string" Label="Navn" Immediate="true" @bind-Value="_newWarehouseHotel.Name" For="(() => _newWarehouseHotel.Name)"></MudTextField>
+            <MudTextField T="string" Label="Tilhørende lokasjonsnavn" Immediate="true" @bind-Value="_newWarehouseHotel.LocationName" For="(() => _newWarehouseHotel.LocationName)"></MudTextField>
+            <MudTextField Lines="8" T="string" Label="Beskrivelse" Variant="Variant.Outlined" Immediate="true" @bind-Value="_newWarehouseHotel.DetailedDescription" For="(() => _newWarehouseHotel.DetailedDescription)"></MudTextField>
+            <MudTextField Lines="8" T="string" Placeholder="Bytt linje for hvert stikkord" Label="Stikkord om lagerhotellet" Variant="Variant.Outlined" Immediate="true" @bind-Value="_newWarehouseHotel.BulletPoints" For="(() => _newWarehouseHotel.BulletPoints)"></MudTextField>
+            <MudTextField Label="Åpningstid" Immediate="true" Placeholder="00-24" @bind-Value="_newWarehouseHotel.OpeningHours.Opens" For="(() => _newWarehouseHotel.OpeningHours.Opens)"></MudTextField>
+            <MudTextField Label="Stengetid" Immediate="true" Placeholder="00-24" @bind-Value="_newWarehouseHotel.OpeningHours.Closes" For="(() => _newWarehouseHotel.OpeningHours.Closes)"></MudTextField>
+            <MudTextField T="string" Label="Mobilnummeret til kundeservice" Placeholder="12345678" Immediate="true" @bind-Value="_newWarehouseHotel.PhoneNumber" For="(() => _newWarehouseHotel.PhoneNumber)"></MudTextField>
+
+            @for (int i = 0; i <= currentFileSelection; i++)
+            {
+                <InputFile class="file-input" OnChange="@OnInputFileChange" id="fileInput" multiple hidden="@(i != currentFileSelection)"></InputFile>
+            }
+            @if (images.Count > 0)
+            {
+                <MudText Typo="Typo.body1">Du har valgt følgende bilder:</MudText>
+                <MudList T="string" Clickable="false">
+                    @foreach (var image in images)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.Image">
+                            <span style="display: flex; align-items: center; justify-content: space-between">@image.Name<MudIconButton OnClick="() => DeleteImage(image.Name)" aria-label="slett" Icon="@Icons.Material.Filled.Delete"></MudIconButton></span>
+
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            <MudSwitch Required="true" T="bool" Label="Har dette lagerhotellet tempererte utleie enheter?" @bind-Value="_newWarehouseHotel.ContainsTemperatedStorageUnits"></MudSwitch>
+            <MudSwitch Required="true" T="bool" Label="Er dette lagerhotellet aktivt?" @bind-Value="_newWarehouseHotel.IsActive"></MudSwitch>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Avbryt</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Add">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .file-input {
+        margin-top: 6px;
+    }
+</style>
+
+@code {
+    MudForm form;
+    private readonly WarehouseHotelValidator _warehouseHotelValidator = new WarehouseHotelValidator();
+    private WarehouseHotel _newWarehouseHotel = new WarehouseHotel
+        {
+            Coordinate = new Coordinate(),
+            OpeningHours = new OpeningHours(),
+            Address = new Address(),
+            StorageUnitsSizes = new StorageUnitSizes(),
+        };
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    List<IBrowserFile> images = new List<IBrowserFile>();
+    private int currentFileSelection = 0;
+
+
+    public async Task Add()
+    {
+        try
+        {
+            await form.Validate();
+            if (form.IsValid)
+            {
+                string jwtToken = await _sessionService.GetJwtFromLocalStorage();
+                string id = await _warehouseHotelService.AddWarehouseHotel(_newWarehouseHotel, images, jwtToken);
+                Snackbar.Add($"Lagerhotellet ble lagt til med følgende ID: {id}", MudBlazor.Severity.Success);
+                await form.ResetAsync();
+            }
+            else
+            {
+                Snackbar.Add("Noe gikk galt, vennligst fyll ut alle feltene riktig", MudBlazor.Severity.Error);
+            }
+        }
+        catch (IOException e)
+        {
+            Snackbar.Add("Noe er galt med bildene du har lastet opp, maksimumsstørrelse er 3MB. .JPEG er IKKE akseptert", MudBlazor.Severity.Error);
+            Console.WriteLine(e);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt, vennligst prøv igjen", MudBlazor.Severity.Error);
+            Console.WriteLine(e);
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    /* private void UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            images.Add(file);
+        }
+        currentFileSelection++;
+    } */
+
+    private void DeleteImage(string fileName)
+    {
+        foreach (var image in images)
+        {
+            if (image.Name == fileName)
+            {
+                images.Remove(image);
+                return;
+            }
+        }
+    }
+
+    void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var maxAllowedFiles = 10;
+
+        images.AddRange(e.GetMultipleFiles(maxAllowedFiles));
+
+        currentFileSelection++;
+    }
+
+    private void InsertFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var item in files)
+        {
+            this.images.Add(item);
+        }
+        currentFileSelection++;
+    }
+}

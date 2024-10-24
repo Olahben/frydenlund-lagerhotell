@@ -1,0 +1,76 @@
+﻿@using LagerhotellAPI.Models.FrontendModels.Custom
+
+<MudItem xs="12" sm="6" md="6" lg="6" xl="6" xxl="6">
+    <MudPaper Square="false" Elevation="3" Style="padding-top: 8px; padding-left: 10px;" Class="d-flex align-center justify-center mud-width-full">
+        <MudGrid Style="width:100%; margin: 0;">
+            <MudItem Style="display: flex; justify-content: center; flex-direction: column; padding-top: 9px; padding-left: 0;" xs="4" sm="4" md="4" lg="4" xl="4" xxl="4">
+                <MudText Typo="Typo.h6" Style="text-align: start;">@Size.RoundedArea M2 <MudIcon Style="font-size: 18px;"></MudIcon></MudText>
+                @if (Size.Temperated)
+                {
+                    <MudText Style="font-weight: 650;" Typo="Typo.body1">Temperert</MudText>
+                }
+                else
+                {
+                    <MudText Style="font-weight: 650; white-space: nowrap;" Typo="Typo.body1"><span style="text-decoration: underline;">Ikke</span> temperert</MudText>
+                }
+                <MudHidden Breakpoint="Breakpoint.MdAndUp"><MudText Style="font-size: 12px;" Typo="Typo.body2">Total volum: @($"{Size.RoundedVolume}M3")</MudText></MudHidden>
+                <MudHidden Breakpoint="Breakpoint.SmAndDown"><MudText Style="" Typo="Typo.body2">Total volum: @($"{Size.RoundedVolume}M3")</MudText></MudHidden>
+            </MudItem>
+            <MudItem Style="display: flex; flex-direction: column; justify-content: center; align-content: center; flex-wrap: wrap; padding-top: 0;" xs="8" sm="8" md="8" lg="8" xl="8" xxl="8">
+                <MudText Typo="Typo.body2"><span style="font-size: 28px; font-weight:500;">@($"{Size.Price.Amount}")kr</span> mnd</MudText>
+                @if (Size.storageUnitIds.Count > 0)
+                {
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" href="@($"/bestill/{Size.storageUnitIds[0]}")">Bestill nå</MudButton>
+                }
+                else
+                {
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="true">Midlertidig utsolgt</MudButton>
+                }
+            </MudItem>
+            <MudLink OnClick="toggleDetails" Style="display: flex; align-items: center; color: black; width: 100%; justify-content: center; margin-top: 8px;" Color="Color.Dark" Underline="Underline.Always">Se detaljer <MudIcon Icon="@Icons.Material.Filled.ArrowDownward"></MudIcon></MudLink>
+            <MudContainer hidden="@(hideDetails)" Style="padding: 8px;">
+                <MudDivider></MudDivider>
+                <MudText Typo="Typo.body1" Style="margin-top: 6px; text-align: center;">
+                    @SizeDescription
+                </MudText>
+            </MudContainer>
+        </MudGrid>
+
+    </MudPaper>
+</MudItem>
+
+@code {
+    [Parameter]
+    public StorageUnitSize Size { get; set; }
+    public string SizeDescription { get; set; }
+    private bool hideDetails = true;
+
+    private void toggleDetails()
+    {
+        hideDetails = !hideDetails;
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (Size.Area <= 3)
+        {
+            SizeDescription = StorageUnitStaticData.StorageUnitSizeDescriptions[StorageUnitStaticData.StorageUnitInfoTexts.XSmall];
+        }
+        else if (Size.Area > 3 && Size.Area <= 8)
+        {
+            SizeDescription = StorageUnitStaticData.StorageUnitSizeDescriptions[StorageUnitStaticData.StorageUnitInfoTexts.Small];
+        }
+        else if (Size.Area > 8 && Size.Area <= 12)
+        {
+            SizeDescription = StorageUnitStaticData.StorageUnitSizeDescriptions[StorageUnitStaticData.StorageUnitInfoTexts.Medium];
+        }
+        else if (Size.Area > 12 && Size.Area <= 18)
+        {
+            SizeDescription = StorageUnitStaticData.StorageUnitSizeDescriptions[StorageUnitStaticData.StorageUnitInfoTexts.Large];
+        }
+        else if (Size.Area > 18)
+        {
+            SizeDescription = StorageUnitStaticData.StorageUnitSizeDescriptions[StorageUnitStaticData.StorageUnitInfoTexts.XLarge];
+        }
+    }
+}

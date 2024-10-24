@@ -1,0 +1,216 @@
+﻿@page "/verifiser-epost"
+@inject NavigationManager _navigationManager
+@inject AppState _appState
+@inject AuthenticateUserService _authenticationService
+@inject CompanyUserService _companyUserService
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject AuthStateProviderService _customAuthenticationStateprovider
+@inject Auth0Service _auth0Service
+@inject SessionService _sessionService
+@inject CompanyUserService _companyUserService
+@inject UserService _userService
+@using System.Data.SqlTypes
+
+@layout NoFooterOrNavBar
+
+<style>
+    .custom-box-shadow {
+        box-shadow: rgba(17, 12, 46, 0.1) 0px 48px 100px 0px;
+    }
+</style>
+
+
+@if (isInitialized)
+{
+    <MudContainer Style="justify-content: center; display: flex; flex-direction: column; max-width: 716px;">
+        <MudPaper Class="custom-box-shadow" Square="false" Elevation="2" Style="padding: 28px; padding-bottom: 46px; padding-top: 36px;">
+            <MudText Typo="Typo.h4" Style="text-align: center; margin-bottom: 10px;">Verifiser e-postadresse</MudText>
+            <MudText Typo="Typo.subtitle1" Style="text-align: center; margin-bottom: 22px;">Vi har sendt en e-post til deg som vil inneholde en lenke. Etter du har trykket på lenken vil denne siden etterhvert sende deg videre.</MudText>
+            <MudText Typo="Typo.body2" Style="text-align: center; margin-bottom: 18px;">Har du ikke mottatt e-posten? Trykk på knappen under for å sende en ny e-post. E-posten kan også ligge i søppelpost mappen.</MudText>
+            <MudContainer Style="justify-content: center; display: flex; gap: 8px;">
+                <MudButtonGroup Color="Color.Primary">
+                    <MudButton Style="" @onclick="() => SendNewVerificationEmail()" Variant="Variant.Outlined">Send ny e-post</MudButton>
+                    <MudButton Style="" @onclick="() => CancelEmailVerification()" Variant="Variant.Outlined">Avbryt</MudButton>
+                    <MudButton @onclick="CheckEmailVerifiedStatus">Sjekk e-post status</MudButton>
+                </MudButtonGroup>
+            </MudContainer>
+        </MudPaper>
+    </MudContainer>
+}
+
+
+@code {
+    private UserAndCompanyUser user;
+    private bool isInitialized = false;
+    [Required(ErrorMessage = "Kodefeltet er påkrevd")]
+    [Length(4, 4, ErrorMessage = "Koden må være 4 siffer")]
+    private int userCode;
+    private string email = "example@example.com";
+    MudForm form;
+    private string sendCodeButtonText = "60";
+    private Timer _timer;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+    private readonly UserServiceSignup _userServiceSignup = new UserServiceSignup();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            user = await _customAuthenticationStateprovider.GetUser();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Fant ikke brukeren", MudBlazor.Severity.Error);
+        }
+        isInitialized = true;
+        Snackbar.Add("En e-post med en kode har blitt sendt til deg", MudBlazor.Severity.Success);
+        await CountDown();
+        _timer = new Timer(OnTimerCallback, null, TimeSpan.Zero, TimeSpan.FromSeconds(20));
+    }
+
+
+    FluentValueValidator<string> emailValidator = new FluentValueValidator<string>(x => x
+    .EmailAddress());
+
+    private void OnTimerCallback(object? state)
+    {
+        if (_cancellationTokenSource.IsCancellationRequested)
+            return;
+        // run async
+        CheckEmailVerifiedStatus();
+    }
+
+    private async Task CheckEmailVerifiedStatus()
+    {
+        try
+        {
+            LagerhotellAPI.Models.DbModels.Auth0.UserAuth0 auth0User;
+            bool companyUser = false;
+            if (user.User.FirstName != null)
+            {
+                auth0User = await _auth0Service.GetAuth0UserbyAuth0Id(user.User.Auth0Id);
+            }
+            else
+            {
+                auth0User = await _auth0Service.GetAuth0UserbyAuth0Id(user.CompanyUser.Auth0Id);
+                companyUser = true;
+
+            }
+            if (auth0User.EmailVerified)
+            {
+                if (!companyUser)
+                {
+                    User updatedUser = new User(user.User.Id, user.User.FirstName, user.User.LastName, user.User.PhoneNumber, user.User.BirthDate, user.User.Address, user.User.Password, user.User.IsAdministrator, user.User.Email, true, user.User.Auth0Id);
+                    await _userService.UpdateUser(updatedUser);
+                }
+                else
+                {
+                    CompanyUser updatedCompanyUser = new CompanyUser(user.CompanyUser.CompanyUserId, user.CompanyUser.FirstName, user.CompanyUser.LastName, user.CompanyUser.Name, user.CompanyUser.CompanyNumber, user.CompanyUser.Email, user.CompanyUser.PhoneNumber, user.CompanyUser.Address, user.CompanyUser.Password, true, user.CompanyUser.Auth0Id);
+                    await _companyUserService.UpdateCompanyUserAsync(updatedCompanyUser);
+                }
+                DisposeTimer();
+                _navigationManager.NavigateTo($"user/{auth0User.UserId}");
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            if (e.Message.Contains("401"))
+            {
+                Snackbar.Add("Du er ikke autentisert, vennligst logg inn på nytt", MudBlazor.Severity.Error);
+                await _sessionService.RemoveItemAsync("access_token");
+                _navigationManager.NavigateTo("/logg-inn");
+            }
+            else if (e.Message.Contains("404"))
+            {
+                Snackbar.Add("Noe gikk galt, vennligst prøv igjen", MudBlazor.Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add("Noe gikk galt, vennligst prøv igjen", MudBlazor.Severity.Error);
+            }
+        }
+    }
+
+    private async Task SendNewVerificationEmail()
+    {
+        string auth0Id = "";
+        try
+        {
+            if (user.User.FirstName != null)
+
+            {
+                auth0Id = user.User.Auth0Id;
+            }
+            else
+            {
+                auth0Id = user.CompanyUser.Auth0Id;
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Fant ikke brukeren", MudBlazor.Severity.Error);
+        }
+        try
+        {
+            await _auth0Service.SendNewVerificationEmail(auth0Id);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt, vennligst prøv igjen", MudBlazor.Severity.Error);
+        }
+        Snackbar.Add("En ny e-post har blitt sendt til deg", MudBlazor.Severity.Success);
+        await CountDown();
+    }
+
+    private async Task CancelEmailVerification()
+    {
+        try
+        {
+            DisposeTimer();
+            if (user.User.FirstName != null)
+            {
+                await _auth0Service.CancelEmailVerification(user.User.Id);
+            }
+            else
+            {
+                await _auth0Service.CancelEmailVerification(user.CompanyUser.CompanyUserId);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            Snackbar.Add("E-posten er allerede verifisert, vennligst vent før du blir sendt videre", MudBlazor.Severity.Error);
+            CheckEmailVerifiedStatus();
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt, vennligst prøv igjen. Last siden inn på nytt hvis feilen fortsetter.", MudBlazor.Severity.Error);
+        }
+    }
+
+    public async Task CountDown()
+    {
+        int time = 60;
+        while (time > 0)
+        {
+            sendCodeButtonText = time.ToString();
+            time--;
+            await Task.Delay(1000);
+            StateHasChanged();
+        }
+        sendCodeButtonText = "Send kode på nytt";
+        StateHasChanged();
+    }
+
+    private void RedirectToRegister()
+    {
+        _navigationManager.NavigateTo("/registrer-deg");
+    }
+
+    private void DisposeTimer()
+    {
+        _cancellationTokenSource.Cancel();
+        _timer?.Dispose();
+        _timer = null;
+    }
+}

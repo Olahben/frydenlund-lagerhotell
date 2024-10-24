@@ -1,0 +1,103 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using System.Text
+@using System.Text.Json
+@using System.Collections.Generic
+@using LagerhotellAPI.Models
+@using LagerhotellAPI.Models.FrontendModels
+
+@page "/log-in-form";
+
+@inject HttpClient http
+@inject NavigationManager navigationManager
+@inject SessionService sessionService
+@inject ISnackbar snackbar
+@inject AppState _appState
+@inject UserServiceLogin _userServiceLogin
+
+
+<EditForm Model="logInValues" OnValidSubmit="LoginUser" class="login-form">
+    <DataAnnotationsValidator />
+    <MudGrid Style="justify-content: start !important;">
+        <MudItem xs="12" Style="">
+            <MudTextField T="string" Class="form-text-field" Style="width: 100%;" HelperText="E-post adressen du brukte da du registrerte deg" Required="true" Label="E-post" InputType="@InputType.Email" @bind-Value="logInValues.Email" For="@(() => logInValues.Email)" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem Style="padding-bottom: 0;" xs="12">
+            <MudTextField Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" T="string" Class="form-text-field" Style="width: 100%;" HelperText="Passordet du brukte da du registrerte deg" Required="true" Label="Passord" InputType="@PasswordInput" @bind-Value="logInValues.Password" For="@(() => logInValues.Password)" Variant="Variant.Outlined" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Vis passord" />
+        </MudItem>
+        <MudItem Style="margin-bottom: 32px; padding-top: 2px;">
+            @*Should link to forgot password site*@
+            <MudLink Style="cursor: pointer;">Glemt passord?</MudLink>
+        </MudItem>
+        <MudItem xs="12" Style="text-align: center; padding-top: 0;">
+            <MudButton FullWidth="true" ButtonType="@ButtonType.Submit" Variant="@Variant.Filled" Color="Color.Primary" Style="width: 100%; max-width: 130px;">Logg inn</MudButton>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+@code {
+    private static readonly HttpClient client = new HttpClient();
+    private LogInValues logInValues = new LogInValues();
+    private CheckPhoneNumber checkPhoneNumber = new CheckPhoneNumber();
+    [Inject]
+    protected AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+    public string ErrorMessage = "";
+
+    // toggle password visibility
+    bool showPassword;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+
+    public class LogInValues
+    {
+        [Required(ErrorMessage = "Ett passord er obligatorisk")]
+        public string? Password { get; set; }
+
+        [Required(ErrorMessage = "Ett telefonnummer er obligatorisk")]
+        [EmailAddress(ErrorMessage = "Ikke en gyldig e-post adresse")]
+        public string? Email { get; set; }
+    }
+
+    public async Task LoginUser()
+    {
+        try
+        {
+            string userId = await _userServiceLogin.LoginUserWithEmail(logInValues.Email, logInValues.Password);
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            StateHasChanged();
+            _appState.NotifyStateChanged();
+            navigationManager.NavigateTo($"user/{userId}");
+        }
+        catch (KeyNotFoundException e)
+        {
+            snackbar.Add("E-post eller passord er feil", MudBlazor.Severity.Error);
+        }
+        catch (InvalidOperationException e)
+        {
+            snackbar.Add("E-post eller passord er feil", MudBlazor.Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Login form" + ex);
+            ErrorMessage = "Mobilnummer eller passord er feil";
+            snackbar.Add(ErrorMessage, MudBlazor.Severity.Error);
+        }
+    }
+
+    void TogglePasswordVisibility()
+    {
+        @if (showPassword)
+        {
+            showPassword = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            showPassword = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}

@@ -1,0 +1,95 @@
+﻿@page "/bestill/{storageUnitId}"
+
+@inject StorageUnitService _storageUnitService
+@inject NavigationManager _navigationManager
+@inject SessionService _sessionService
+@inject WarehouseHotelService _warehouseHotelService
+@inject UserService _userService
+@inject AuthStateProviderService _customAuthenticationStateProvider
+
+<MudContainer Style="display: flex; flex-direction: column; max-width: 100%; padding: 0;">
+    <MudContainer Style="padding-left: 16px; padding-right: 16px;" MaxWidth="MaxWidth.Large">
+        <MudBreadcrumbs Items=breadcrumbItems Style="padding-left: 0; padding-right: 0; font-size: 14px;" />
+    </MudContainer>
+    <MudContainer Style="padding: 0; display: flex; flex-direction: column; margin-left: 0; margin-right: 0; width: 100%; max-width: 100%;  background-color: #f7f8f6;">
+        <MudContainer MaxWidth="MaxWidth.Large" Style="padding-left: 0; padding-right: 0;">
+            <MudContainer Style="max-width: 100%; padding: 16px;">
+                <MudGrid Justify="Justify.Center" Style="">
+                    @if (currentOrder != null)
+                    {
+                        <MovingInDate RelevantOrder=@currentOrder />
+                        <Insurance RelevantOrder=@currentOrder />
+                        <ContactInformation />
+                        <OrderConfirmation IsUserAuthenticated=@authorized RelevantWarehouseHotel=@relevantWarehouseHotel RelevantOrder=@currentOrder RelevantStorageUnit=@relevantStorageUnit />
+                    }
+                </MudGrid>
+            </MudContainer>
+        </MudContainer>
+    </MudContainer>
+</MudContainer>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    [Parameter]
+    public string StorageUnitId { get; set; }
+    string userAccessToken;
+    StorageUnit relevantStorageUnit = new StorageUnit();
+    LagerhotellAPI.Models.DomainModels.Order currentOrder;
+    OrderValidator orderValidator = new();
+    private WarehouseHotel relevantWarehouseHotel = new()
+        {
+            Address = new Address(),
+            Coordinate = new Coordinate(),
+            StorageUnitsSizes = new StorageUnitSizes(),
+            OpeningHours = new OpeningHours()
+        };
+    private bool authorized = false;
+    private List<BreadcrumbItem> breadcrumbItems { get; set; } = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Hjem", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Lagerhotell", href: null, disabled: true, icon: Icons.Material.Filled.LocationCity),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var userOrCompanyUser = await _customAuthenticationStateProvider.GetUser();
+            if (userOrCompanyUser.User.FirstName != null)
+            {
+                authorized = true;
+                string userId = userOrCompanyUser.User.Id;
+                currentOrder = new LagerhotellAPI.Models.DomainModels.Order("", userId, StorageUnitId, new OrderPeriod() { OrderDate = DateTime.Now }, OrderStatus.NotCreated, OrderInsurance.FiftyThousand, "");
+            }
+            else if (userOrCompanyUser.CompanyUser.FirstName != null)
+            {
+                authorized = true;
+                string userId = userOrCompanyUser.CompanyUser.CompanyUserId;
+                currentOrder = new LagerhotellAPI.Models.DomainModels.Order("", userId, StorageUnitId, new OrderPeriod() { OrderDate = DateTime.Now }, OrderStatus.NotCreated, OrderInsurance.FiftyThousand, "");
+            }
+            else
+            {
+                Snackbar.Add("Du må være logget inn for å bestille", MudBlazor.Severity.Warning, config =>
+                {
+                    config.Action = "Logg inn";
+                    config.ActionColor = Color.Primary;
+                    config.CloseAfterNavigation = true;
+                    config.Onclick = (Snackbar) => Task.Run(() => _navigationManager.NavigateTo("/logg-inn"));
+                });
+            }
+            relevantStorageUnit = await _storageUnitService.GetStorageUnit(StorageUnitId, userAccessToken);
+            relevantWarehouseHotel = await _warehouseHotelService.GetWarehouseHotel(relevantStorageUnit.WarehouseHotelId);
+            breadcrumbItems.Add(new BreadcrumbItem(relevantWarehouseHotel.Name, href: $"/lagerhotell/{relevantWarehouseHotel.Name}", icon: Icons.Material.Filled.LocationCity));
+            breadcrumbItems.Add(new BreadcrumbItem("Din bestilling", href: null, disabled: true, icon: Icons.Material.Filled.ShoppingCart));
+        }
+        catch (KeyNotFoundException e)
+        {
+            Console.WriteLine($"{e}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"{e}");
+        }
+    }
+}

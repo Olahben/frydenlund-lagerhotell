@@ -1,0 +1,115 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager _navigationManager
+@implements IBrowserViewportObserver
+@implements IAsyncDisposable
+
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@*<MudLayout>
+    <MudAppBar Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudSpacer />
+        @*<MudMenu Label="Lokasjoner" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.TopLeft" Dense Variant="Variant.Text" Color="Color.Inherit" ActivationEvent="@MouseEvent.MouseOver">
+        <MudMenuItem>
+        <MudMenu Label="" Variant="Variant.Text" Color="Color.Inherit" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopLeft" Dense>
+        <ActivatorContent>
+        <MudMenuItem><MudLink Href="/Lagerhotell/Rjukan">Kristiansund</MudLink></MudMenuItem>
+        </ActivatorContent>
+        <ChildContent>
+        <MudMenuItem><MudLink Href="/Lagerhotell/Bremsnes"></MudLink>Bremsnes</MudMenuItem>
+        <MudMenuItem><MudLink Href="/Lagerhotell/Rensvik"></MudLink>Renvik</MudMenuItem>
+        </ChildContent>
+        </MudMenu>
+        </MudMenuItem>
+        </MudMenu>
+        <MudButton Color="Color.Inherit" Variant="Variant.Text" OnClick="@(() => OpenRightDrawer(Anchor.End))">Lokasjoner</MudButton>
+        @if (rightSideBarOpen)
+        {
+            <MudDrawer @bind-Open="@rightSideBarOpen" Anchor="@anchor" Elevation="1" Variant="@DrawerVariant.Temporary">
+                <Lagerhotell.Pages.SideBar.LocationsSideBar />
+            </MudDrawer>
+        }
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Lagerhotell</MudText>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>*@
+
+<MudLayout Style="justify-content: center;">
+    <MudAppBar Fixed="true" Style="background-color: white;display: flex; justify-content: center; justify-self: center;" Elevation="0">
+        <Lagerhotell.Shared.NavBar.NavBar />
+    </MudAppBar>
+        <MudMainContent Style="display: flex; justify-content: center; max-height: fit-content; min-height: calc(100vh - 324px) !important;">
+            @Body
+        </MudMainContent>
+    <FooterI></FooterI>
+</MudLayout>
+
+<style>
+    .clickable:hover {
+        cursor: pointer;
+    }
+
+    .mud-toolbar {
+        padding: 0;
+    }
+</style>
+
+@code {
+    bool _drawerOpen = true;
+    private Breakpoint _currentBreakpoint;
+    [Inject]
+    private IBrowserViewportService browserViewportService { get; set; }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await browserViewportService.SubscribeAsync(this, fireImmediately: true);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async ValueTask DisposeAsync() => await browserViewportService.UnsubscribeAsync(this);
+
+    Guid IBrowserViewportObserver.Id { get; } = Guid.NewGuid();
+
+    ResizeOptions IBrowserViewportObserver.ResizeOptions { get; } = new()
+        {
+            ReportRate = 250,
+            NotifyOnBreakpointOnly = true
+        };
+
+    Task IBrowserViewportObserver.NotifyBrowserViewportChangeAsync(BrowserViewportEventArgs browserViewportEventArgs)
+    {
+        if (browserViewportEventArgs.IsImmediate)
+        {
+            _currentBreakpoint = browserViewportEventArgs.Breakpoint;
+        }
+        else
+        {
+            _currentBreakpoint = browserViewportEventArgs.Breakpoint;
+            Console.WriteLine(_currentBreakpoint.ToString());
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+}

@@ -1,0 +1,17 @@
+﻿<MudPaper Style="margin-top: 126px; padding: 16px; text-align: center; max-width: 470px; margin-bottom: 126px; margin-left: 6px; margin-right: 6px; max-height: 280px;">
+     <MudText Style="margin-bottom: 10px;" Typo="Typo.h4">Du er allerede logget inn</MudText>
+     <MudText Style="margin-bottom: 42px;" Typo="Typo.body1">Du kan fortsette å bruke applikasjonen om du vil, eller så kan du logge ut av brukeren din nedenfor.</MudText>
+     <MudButton Style="margin-bottom: 18px;" Color="Color.Primary" OnClick="@LogOutUser" Variant="Variant.Outlined">Logg ut</MudButton>
+ </MudPaper>
+
+ @inject SessionService sessionService
+ @inject NavigationManager navigationManager
+
+ @code {
+    public async Task? LogOutUser()
+    {
+        await sessionService.RemoveItemAsync("jwtToken");
+        navigationManager.NavigateTo(navigationManager.Uri, true);
+
+    }
+}

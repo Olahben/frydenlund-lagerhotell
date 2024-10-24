@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LagerhotellAPI", "LagerhotellAPI\LagerhotellAPI.csproj", "{277C9795-7E66-490E-9DBA-D1147F384546}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lagerhotell.Shared", "Lagerhotell.Shared\Lagerhotell.Shared.csproj", "{78C387F6-ECF7-4BEB-BB14-477A954C3F45}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{277C9795-7E66-490E-9DBA-D1147F384546}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{277C9795-7E66-490E-9DBA-D1147F384546}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{277C9795-7E66-490E-9DBA-D1147F384546}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{277C9795-7E66-490E-9DBA-D1147F384546}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78C387F6-ECF7-4BEB-BB14-477A954C3F45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78C387F6-ECF7-4BEB-BB14-477A954C3F45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78C387F6-ECF7-4BEB-BB14-477A954C3F45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78C387F6-ECF7-4BEB-BB14-477A954C3F45}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A6731877-E699-4209-95B0-93F6F3C39808}
+	EndGlobalSection
+EndGlobal

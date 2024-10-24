@@ -1,0 +1,152 @@
+﻿@inject OrderService _orderService
+@inject StorageUnitService _storageUnitService
+@inject SessionService _sessionService
+@inject WarehouseHotelService _warehouseHotelService
+@inject UserService _userService
+@inject IDialogService _dialogService
+
+
+<MudTable Items="@_orderAdminViewModels" Filter="new Func<OrderAdminViewModel, bool>(FilterFunc1)">
+    <ToolBarContent>
+        <MudText Style="margin-left: 6px;" Typo="Typo.h6">Brukerbestillinger</MudText>
+        <MudSpacer />
+        <MudTextField Style="margin-right: 6px;" @bind-Value="searchString1" Placeholder="Søk" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Status</MudTh>
+        <MudTh>Fornavn</MudTh>
+        <MudTh>Etternavn</MudTh>
+        <MudTh>Tlfnr</MudTh>
+        <MudTh>E-post</MudTh>
+        <MudTh>Lagerhotell</MudTh>
+        <MudTh>Bod</MudTh>
+        <MudTh>Dato bestilt</MudTh>
+        <MudTh>Avslutningsdato</MudTh>
+        <MudTh>Neste betalingsdato</MudTh>
+        <MudTh>Kanseller</MudTh>
+        <MudTh>Godkjenn</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Order.Status</MudTd>
+            <MudTd>@context.User.FirstName</MudTd>
+            <MudTd>@context.User.LastName</MudTd>
+            <MudTd>@context.User.PhoneNumber</MudTd>
+            <MudTd>@context.User.Email</MudTd>
+            <MudTd>@context.WarehouseHotelName</MudTd>
+            <MudTd>@context.StorageUnit.Name</MudTd>
+            <MudTd>@context.Order.OrderPeriod.OrderDate?.ToString("dd.MM.yyyy")</MudTd>
+            @if (context.Order.OrderPeriod.EndDate != null)
+        {
+            <MudTd>@context.Order.OrderPeriod.EndDate?.ToString("dd.MM.yyyy")</MudTd>
+        }
+        else
+        {
+            <MudTd>Ikke satt</MudTd>
+        }
+        <MudTd>@context.Order.OrderPeriod.NextPaymentDate.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd><MudIcon Style="cursor: pointer;" Icon="@Icons.Material.Filled.Cancel" @onclick="() => OpenCancelDialogAsync(context.Order, context.User, context.StorageUnit, context.WarehouseHotelName)"></MudIcon></MudTd>
+            @if (context.Order.Status == OrderStatus.Pending) {
+            <MudTd><MudIcon Style="cursor: pointer;" Icon="@Icons.Material.Filled.Send" @onclick="() => OpenConfirmOrderDialogAsync(context.Order, context.StorageUnit, context.WarehouseHotelName)"></MudIcon></MudTd>
+        } else
+        {
+            <MudTd><MudTooltip Text="Bestillingen kan ikke godkjennes, den er allerede kansellert eller godkjent"><MudIcon Icon="@Icons.Material.Filled.Send"></MudIcon></MudTooltip></MudTd>
+
+        }
+    </RowTemplate>
+        <PagerContent>
+            <MudTablePager RowsPerPageString="Antall rader:" InfoFormat="{first_item}-{last_item} av {all_items}" />
+        </PagerContent>
+    </MudTable>
+
+@code {
+    private List<OrderAdminViewModel> _orderAdminViewModels = new List<OrderAdminViewModel>();
+    private List<Order> _orders = new List<Order>();
+    private List<StorageUnit> _storageUnits = new List<StorageUnit>();
+    private List<User> _users = new List<User>();
+    private List<string> _warehouseHotelNames = new List<string>();
+    private string searchString1 = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string token = await _sessionService.GetJwtFromLocalStorage();
+            _orders = await _orderService.GetAllOrders(0, 0);
+
+            foreach (var order in _orders)
+            {
+                var _linkedUser = await _userService.GetUserById(order.UserId);
+                _users.Add(_linkedUser);
+                var _linkedStorageUnit = await _storageUnitService.GetStorageUnit(order.StorageUnitId, token);
+                _storageUnits.Add(_linkedStorageUnit);
+                string _linkedWarehouseHotelName = await _warehouseHotelService.GetWarehouseHotelName(_linkedStorageUnit.WarehouseHotelId);
+                _warehouseHotelNames.Add(_linkedWarehouseHotelName);
+
+                OrderAdminViewModel orderAdminViewModel = new OrderAdminViewModel(order, _linkedUser, _linkedWarehouseHotelName, _linkedStorageUnit);
+                _orderAdminViewModels.Add(orderAdminViewModel);
+            }
+
+            // sort by order date
+            _orderAdminViewModels = _orderAdminViewModels.OrderBy(o => o.Order.OrderPeriod.OrderDate).ToList();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Console.WriteLine($"Data was not found: {e}");
+            Snackbar.Add("Fant ikke nødvendig data, se i konsollen for nærmere informasjon", MudBlazor.Severity.Error);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Something went wrong: {e}");
+            Snackbar.Add("Kunne ikke hente inn data, se i konsollen for nærmere informasjon", MudBlazor.Severity.Error);
+        }
+    }
+
+    private bool FilterFunc1(OrderAdminViewModel element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(OrderAdminViewModel element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.User.PhoneNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+         /*
+         * Commented out because there are no users with email in the database
+         if (element.User.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        */
+        if (element.WarehouseHotelName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.StorageUnit.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private Task OpenCancelDialogAsync(Order order, User user, StorageUnit storageUnit, string warehouseHotelName)
+    {
+        // var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters<CancelOrder>
+        {
+            { x => x.Order, order },
+            { x => x.StorageUnit, storageUnit },
+            { x => x.WarehouseHotelName, warehouseHotelName }
+        };
+
+        return DialogService.ShowAsync<CancelOrder>("Simple Dialog", parameters);
+    }
+
+    private Task OpenConfirmOrderDialogAsync(Order order, StorageUnit storageUnit, string warehouseHotelName)
+    {
+        var parameters = new DialogParameters<ConfirmOrder>
+        {
+            { x => x.Order, order },
+            { x => x.StorageUnit, storageUnit },
+            { x => x.WarehouseHotelName, warehouseHotelName }
+        };
+
+        return DialogService.ShowAsync<ConfirmOrder>("Simple Dialog", parameters);
+    }
+}

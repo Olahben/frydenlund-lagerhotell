@@ -1,0 +1,174 @@
+﻿@inject SessionService _sessionService
+@inject WarehouseHotelService _warehouseHotelService
+@inject IDialogService _dialogService
+@inject AssetService _assetService
+
+<MudDialog @bind-Visible="MainDialogOpen">
+    <DialogContent>
+        <MudForm @ref="mainForm" Model="_newWarehouseHotel" Validation="@(_warehouseHotelValidator.ValidateValue)">
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Breddegrad" Immediate="true" @bind-Value="_newWarehouseHotel.Coordinate.Latitude" For="(() => _newWarehouseHotel.Coordinate.Latitude)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Lengdegrad" Immediate="true" @bind-Value="_newWarehouseHotel.Coordinate.Longitude" For="(() => _newWarehouseHotel.Coordinate.Longitude)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Hvor stor er den minste utleieenheten? (Oppgitt i meter2)" Immediate="true" @bind-Value="_newWarehouseHotel.StorageUnitsSizes.MinSize" For="(() => _newWarehouseHotel.StorageUnitsSizes.MinSize)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Hvor stor er den største utleieenheten? (Oppgitt i meter2)" Immediate="true" @bind-Value="_newWarehouseHotel.StorageUnitsSizes.MaxSize" For="(() => _newWarehouseHotel.StorageUnitsSizes.MaxSize)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" T="string" Label="Gateaddresse" Immediate="true" @bind-Value="_newWarehouseHotel.Address.StreetAddress" For="(() => _newWarehouseHotel.Address.StreetAddress)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" T="string" Label="Postkode" Immediate="true" @bind-Value="_newWarehouseHotel.Address.PostalCode" For="(() => _newWarehouseHotel.Address.PostalCode)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" T="string" Label="Poststed" Immediate="true" @bind-Value="_newWarehouseHotel.Address.City" For="(() => _newWarehouseHotel.Address.City)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" T="string" Label="Navn" Immediate="true" @bind-Value="_newWarehouseHotel.Name" For="(() => _newWarehouseHotel.Name)"></MudTextField>
+            <MudTextField T="string" Label="Tilhørende lokasjonsnavn" Immediate="true" @bind-Value="_newWarehouseHotel.LocationName" For="(() => _newWarehouseHotel.LocationName)"></MudTextField>
+            <MudTextField T="string" Lines="8" Label="Beskrivelse" Variant="Variant.Outlined" Immediate="true" @bind-Value="_oldWarehouseHotel.DetailedDescription" For="(() => _oldWarehouseHotel.DetailedDescription)"></MudTextField>
+            <MudTextField Lines="8" Placeholder="Bytt linje for hvert stikkord" T="string" Label="Stikkord om lagerhotellet" Variant="Variant.Outlined" Immediate="true" @bind-Value="_newWarehouseHotel.BulletPoints" For="(() => _newWarehouseHotel.BulletPoints)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Åpningstid" Immediate="true" Placeholder="00-24" @bind-Value="_newWarehouseHotel.OpeningHours.Opens" For="(() => _newWarehouseHotel.OpeningHours.Opens)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" Label="Stengetid" Immediate="true" Placeholder="00-24" @bind-Value="_newWarehouseHotel.OpeningHours.Closes" For="(() => _newWarehouseHotel.OpeningHours.Closes)"></MudTextField>
+            <MudTextField RequiredError="Dette feltet kan ikke være tomt" T="string" Label="Mobilnummeret til kundeservice" Placeholder="12345678" Immediate="true" @bind-Value="_newWarehouseHotel.PhoneNumber" For="(() => _newWarehouseHotel.PhoneNumber)"></MudTextField>
+            @for (int i = 0; i <= currentFileSelection; i++)
+            {
+                <InputFile class="file-input" OnChange="@OnInputFileChange" id="fileInput" multiple hidden="@(i != currentFileSelection)"></InputFile>
+            }
+            @if (warehouseHotelImages.Count > 0)
+            {
+                <MudText Typo="Typo.body1">Du har valgt følgende bilder:</MudText>
+                <MudList T="string" Clickable="false">
+                    @foreach (var image in warehouseHotelImages)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.Image">
+                            <span style="display: flex; align-items: center; justify-content: space-between">@image.Name<MudIconButton OnClick="() => DeleteImage(image.Name)" aria-label="slett" Icon="@Icons.Material.Filled.Delete"></MudIconButton></span>
+
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            <MudSwitch Required="true" T="bool" Label="Har dette lagerhotellet tempererte utleie enheter?" @bind-Value="_newWarehouseHotel.ContainsTemperatedStorageUnits"></MudSwitch>
+            <MudSwitch Required="true" T="bool" Label="Er dette lagerhotellet aktivt?" @bind-Value="_newWarehouseHotel.IsActive"></MudSwitch>
+        </MudForm>
+        <MudDialog @bind-Visible="SecondDialogOpen">
+            <DialogContent>
+                <MudForm @ref="secondaryForm" Model="_oldWarehouseHotel" Validation="@(_warehouseHotelValidator.ValidateValue)">
+                    <MudTextField Required="true" RequiredError="Dette feltet kan ikke være tomt" @bind-Value="_oldWarehouseHotel.Name" For="(() => _oldWarehouseHotel.Name)" Immediate="true" Label="Navnet på lagerhotellet du vil endre"></MudTextField>
+                </MudForm>
+            </DialogContent>
+            <DialogActions>
+                <MudButton Color="Color.Primary" OnClick="GetOldWarehouseHotel">Ok</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Avbryt</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Change">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public bool MainDialogOpen { get; set; } = false;
+    public bool SecondDialogOpen { get; set; } = true;
+    MudForm mainForm;
+    MudForm secondaryForm;
+    private readonly WarehouseHotelValidator _warehouseHotelValidator = new WarehouseHotelValidator();
+    private WarehouseHotel _oldWarehouseHotel = new WarehouseHotel
+        {
+            Coordinate = new Coordinate(),
+            OpeningHours = new OpeningHours(),
+            Address = new Address(),
+            StorageUnitsSizes = new StorageUnitSizes(),
+        };
+    private List<ImageAssetBrowserFile> oldWarehouseHotelImages = new();
+    private List<IBrowserFile> warehouseHotelImages = new();
+    private WarehouseHotel _newWarehouseHotel = new WarehouseHotel
+        {
+            Coordinate = new Coordinate(),
+            OpeningHours = new OpeningHours(),
+            Address = new Address(),
+            StorageUnitsSizes = new StorageUnitSizes(),
+        };
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private int descriptionParas = 1;
+    private List<string> detailedDescriptionParas = new List<string>();
+    private int currentFileSelection = 0;
+
+
+    private async Task Change()
+    {
+        try
+        {
+            await mainForm.Validate();
+            if (mainForm.IsValid)
+            {
+                string jwtToken = await _sessionService.GetJwtFromLocalStorage();
+                await _warehouseHotelService.ChangeWarehouseHotel(_oldWarehouseHotel.Name, _newWarehouseHotel, warehouseHotelImages, jwtToken);
+                Snackbar.Add("Lagerhotellet ble endret", MudBlazor.Severity.Success);
+                await mainForm.ResetAsync();
+            }
+            else
+            {
+                Snackbar.Add("Det er noe galt med verdiene du har fylt inn, vær så snill å sjekk tilhørende feilmelding", MudBlazor.Severity.Error);
+            }
+        }
+        catch (IOException e)
+        {
+            Snackbar.Add("Noe er galt med bildene du har lastet opp, maksimumsstørrelse er 5MB.", MudBlazor.Severity.Error);
+            Console.WriteLine(e);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt", MudBlazor.Severity.Error);
+            Console.WriteLine($"{e}");
+        }
+    }
+
+    private async Task GetOldWarehouseHotel()
+    {
+        try
+        {
+            await secondaryForm.Validate();
+            if (secondaryForm.IsValid)
+            {
+                string jwtToken = await _sessionService.GetJwtFromLocalStorage();
+                _oldWarehouseHotel = await _warehouseHotelService.GetWarehouseHotelByName(_oldWarehouseHotel.Name, jwtToken);
+                _newWarehouseHotel = _oldWarehouseHotel;
+                List<ImageAsset> oldWarehouseHotelAssets = await _assetService.GetLinkedWarehouseHotelImages(_oldWarehouseHotel.WarehouseHotelId);
+                foreach (var asset in oldWarehouseHotelAssets)
+                {
+                    oldWarehouseHotelImages.Add(new ImageAssetBrowserFile(asset));
+                }
+                foreach (var asset in oldWarehouseHotelImages)
+                {
+                    warehouseHotelImages.Add(asset);
+                }
+                Snackbar.Add("Lagerhotellet ble hentet", MudBlazor.Severity.Success);
+                await secondaryForm.ResetAsync();
+                MainDialogOpen = true;
+                SecondDialogOpen = false;
+            }
+            else
+            {
+                Snackbar.Add("Det er noe galt med verdiene du har fylt inn, vær så snill å sjekk tilhørende feilmelding", MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Noe gikk galt", MudBlazor.Severity.Error);
+            Console.WriteLine($"{e}");
+        }
+    }
+    void Cancel() => MudDialog.Cancel();
+
+    void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var maxAllowedFiles = 10;
+
+        warehouseHotelImages.AddRange(e.GetMultipleFiles(maxAllowedFiles));
+
+        currentFileSelection++;
+    }
+
+    private void DeleteImage(string fileName)
+    {
+        foreach (var image in warehouseHotelImages)
+        {
+            if (image.Name == fileName)
+            {
+                warehouseHotelImages.Remove(image);
+                return;
+            }
+        }
+    }
+}

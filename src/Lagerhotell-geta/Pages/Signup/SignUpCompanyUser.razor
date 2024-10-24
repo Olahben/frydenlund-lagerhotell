@@ -1,0 +1,114 @@
+﻿@using System.Data.SqlTypes
+@inject CompanyUserService _companyUserService
+@inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject AppState _appState
+@inject AuthenticateUserService _authenticationService
+
+<MudForm Model="companyUser" @ref="@form" Validation="@(validator.ValidateValue)" ValidationDelay="0">
+    <MudGrid Style="">
+        <MudItem Style="padding-bottom: 12px;" xs="12" sm="6"><MudTextField T="string" @bind-Value="companyUser.FirstName" Label="Fornavn" Variant="Variant.Outlined" Immediate="true" For="@(() => companyUser.FirstName)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px;" xs="12" sm="6"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.LastName" Label="Etternavn" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.LastName)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.Name" Label="Firma navn" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.Name)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6"><MudTextField InputType="@InputType.Number" @bind-Value="companyUser.CompanyNumber" Label="Organisasjonsnummer" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.CompanyNumber)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="12" md="4"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.Address.StreetAddress" Label="Adresse" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.Address.StreetAddress)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6" md="4"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.Address.PostalCode" Label="Postkode" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.Address.PostalCode)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6" md="4"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.Address.City" Label="Poststed" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.Address.City)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.Email" Label="E-post" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.Email)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="12" sm="6"><MudTextField InputType="@InputType.Text" @bind-Value="companyUser.PhoneNumber" Label="Mobilnummer" Variant="Variant.Outlined" Immediate="true" For="(() => companyUser.PhoneNumber)" OnlyValidateIfDirty="true" /></MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="6" sm="6">
+            <MudTextField T="string" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" Variant="Variant.Outlined" Class="form-text-field" Required="true" RequiredError="Ett passord er obligatorisk" Label="Passord" InputType="@PasswordInput" @bind-Value="companyUser.Password" For="@(() => companyUser.Password)" OnAdornmentClick="TogglePasswordVisibility" AdornmentAriaLabel="Vis passord" OnlyValidateIfDirty="true" />
+        </MudItem>
+        <MudItem Style="padding-bottom: 12px; padding-top: 12px;" xs="6" sm="6">
+            <MudTextField T="string" Variant="Variant.Outlined" Class="form-text-field" Required="true" @bind-Value="repeatPassword" RequiredError="Du må skrive inn passordet ditt på nytt" Label="Repeter passord" InputType="@InputType.Password" OnlyValidateIfDirty="true" />
+        </MudItem>
+        <MudItem Style="padding-top: 12px;" xs="12" sm="12">
+            <MudButton ButtonType="ButtonType.Button" OnClick="@((e) => ValidateForm())" Variant="Variant.Outlined" Color="Color.Primary">Registrer deg</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+@code {
+    private CompanyUser companyUser = new CompanyUser();
+    private string repeatPassword;
+    private CompanyUserValidator validator = new();
+    MudForm form = new MudForm();
+
+    bool showPassword;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_appState.CompanyUserBeforeVerified != null) {
+            companyUser = _appState.CompanyUserBeforeVerified;
+        }
+    }
+
+    public async Task SignUpUser()
+    {
+        if (companyUser.Password != repeatPassword)
+        {
+            Snackbar.Add("Passordene er ikke like", MudBlazor.Severity.Error);
+            return;
+        }
+        try
+        {
+            try
+            {
+                await _companyUserService.DoesSimilarUserExist(companyUser.CompanyNumber, companyUser.PhoneNumber, companyUser.Email);
+            } catch (SqlAlreadyFilledException e)
+            {
+                Snackbar.Add("Det er allerede registrert en bruker med dette telefonnummeret eller e-posten", MudBlazor.Severity.Error);
+                return;
+            } catch (KeyNotFoundException)
+            {
+                Snackbar.Add("Det er ingen norske registrerte firmaer med dette nummeret", MudBlazor.Severity.Error);
+                return;
+            } catch (Exception)
+            {
+                Snackbar.Add("Noe gikk galt, prøv på nytt senere", MudBlazor.Severity.Error);
+                return;
+            }
+            _appState.SetCompanyUserBeforeEmailVerified(companyUser);
+            string id = await _companyUserService.CreateCompanyUserAsync(companyUser);
+            await _authenticationStateProvider.GetAuthenticationStateAsync();
+            StateHasChanged();
+            _appState.NotifyStateChanged();
+            _navigationManager.NavigateTo("/verifiser-epost");
+
+        } catch (KeyNotFoundException e)
+        {
+            Snackbar.Add("Det er ingen norske registrerte firmaer med denne informasjonen", MudBlazor.Severity.Error);
+        }
+        catch (SqlAlreadyFilledException e)
+        {
+            Snackbar.Add("Det er allerede registrert en bruker med disse dataene", MudBlazor.Severity.Error);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Snackbar.Add($"Noe gikk galt, prøv på nytt senere", MudBlazor.Severity.Error);
+        }
+    }
+
+    private async Task ValidateForm()
+    {
+        Console.WriteLine(companyUser.FirstName);
+        Console.WriteLine(form.IsValid);
+        await form.Validate();
+        if (!form.IsValid)
+        {
+            Snackbar.Add("Det er noe galt med verdiene du har fylt inn, vær så snill å sjekk tilhørende feilmelding", MudBlazor.Severity.Error);
+            return;
+        }
+        await SignUpUser();
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        PasswordInput = showPassword ? InputType.Password : InputType.Text;
+        PasswordInputIcon = showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+        showPassword = !showPassword;
+    }
+}
