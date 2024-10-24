@@ -1,0 +1,13 @@
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\bin\Debug\net8.0\Lagerhotell.Shared.deps.json
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\bin\Debug\net8.0\Lagerhotell.Shared.dll
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\bin\Debug\net8.0\Lagerhotell.Shared.pdb
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.csproj.AssemblyReference.cache
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.AssemblyInfoInputs.cache
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.AssemblyInfo.cs
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.csproj.CoreCompileInputs.cache
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.sourcelink.json
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.dll
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\refint\Lagerhotell.Shared.dll
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\Lagerhotell.Shared.pdb
+C:\Users\ohage\source\repos\Olahben\LagerhotellAPI\Lagerhotell.Shared\obj\Debug\net8.0\ref\Lagerhotell.Shared.dll

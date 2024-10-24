@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "P0gIgM3InMY=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\ohage\\source\\repos\\Olahben\\LagerhotellAPI\\Lagerhotell.Shared\\Lagerhotell.Shared.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ohage\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.authorization\\8.0.4\\microsoft.aspnetcore.authorization.8.0.4.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.components\\8.0.4\\microsoft.aspnetcore.components.8.0.4.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\8.0.4\\microsoft.aspnetcore.components.analyzers.8.0.4.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.components.forms\\8.0.4\\microsoft.aspnetcore.components.forms.8.0.4.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.aspnetcore.metadata\\8.0.4\\microsoft.aspnetcore.metadata.8.0.4.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.1\\microsoft.extensions.dependencyinjection.abstractions.8.0.1.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.1\\microsoft.extensions.logging.abstractions.8.0.1.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.extensions.options\\8.0.2\\microsoft.extensions.options.8.0.2.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\mongodb.bson\\2.23.1\\mongodb.bson.2.23.1.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",
+    "C:\\Users\\ohage\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\5.0.0\\system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
